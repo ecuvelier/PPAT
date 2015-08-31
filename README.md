@@ -1,4 +1,4 @@
-# mpfeppat
+# PPAT prototype
 Multi-Party Function Evaluation with Perfectly Private Audit Trail
 ############################################################
 
