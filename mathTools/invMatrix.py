@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Created on 2013-2014
+
+Author : Edouard Cuvelier
+Affiliation : Université catholique de Louvain - ICTEAM - UCL Crypto Group
+Address : Place du Levant 3, 1348 Louvain-la-Neuve, BELGIUM
+email : firstname.lastname@uclouvain.be
+"""
+
 import random
 import numpy
 #import time

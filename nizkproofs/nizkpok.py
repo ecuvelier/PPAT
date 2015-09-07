@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Created on 2013-2014
+
+Author : Edouard Cuvelier
+Affiliation : Université catholique de Louvain - ICTEAM - UCL Crypto Group
+Address : Place du Levant 3, 1348 Louvain-la-Neuve, BELGIUM
+email : firstname.lastname@uclouvain.be
+"""
 
 from Crypto.Random.random import randint
 import ppat.ppats
+import ppat.ppatc
 import mathTools.otosEC as oEC
 
 
@@ -34,6 +43,58 @@ def consitencyProof(ppatspk,c,m,r,s,mp=None,rp=None,sp=None):
 
     return [nu,zm,zr,zs]
 
+def consistencyProof_ppatc(ppatcpk,c,m,r1,r2,r3,s=None,s1=None,s2=None,s3=None):
+    ''' This proof ensures that the commitment part of the ciphertext is
+    commiting on the same message that is encrypted in the encryption part
+    The proof is a proof of equality between discrete logarithms
+    '''
+
+    # notations
+    '''
+    h = ppatcpk.PPATCpp.h
+    ECG1 = h.ECG
+    h1 = ppatcpk.h1
+    g = ppatcpk.PPATCpp.g
+    ECG2 = g.ECG
+    Jcoord = ppatcpk.PPATCpp.Jcoord
+    g1 = ppatcpk.g1
+    g2 = ppatcpk.g2
+    '''
+    q = ppatcpk.PPATCpp.order
+
+    if s1 == None:
+        s1 = randint(1,int(q))
+    if s2 == None:
+        s2 = randint(1,int(q))
+    if s3 == None:
+        s3 = randint(1,int(q))
+    if s == None:
+        s = randint(1,int(q))
+    '''
+    ms = ppatcpk.encode(s) # ms is a random element of G1
+
+    c1pt = oEC.mul_comb2_EFp2(ECG2,s2,ppatcpk.precomp_g,Jcoord)
+    c1p = oEC.toEFp2(ECG2,c1pt,Jcoord)
+    c1p = s2*g
+    c2p = s3*g
+    c3p = s1*g1 + s3*g2
+    d1p = s1*h + s2*h1
+    d2p = ms + s2*g1
+    dp = ppat.ppatc.PPATCCommitment(d1p,d2p,ppatcpk)
+    cp = ppat.ppatc.PPATCCiphertext(dp,c1p,c2p,c3p,ppatcpk)
+    '''
+    cp = ppatcpk.encrypt(s,s1,s2,s3)
+
+    nu = ppatcpk.hashf([ppatcpk.PPATCpp,ppatcpk,c,cp])
+
+    f1 = (s1 + nu*r1)%q
+    f2 = (s2 + nu*r2)%q
+    f3 = (s3 + nu*r3)%q
+    #fm = (mp + nu*m) %q
+    fm = (s + nu*m) %q
+
+    return [nu,f1,f2,f3,fm]
+
 def consistencyProofCheck(ppatspk,c,proof):
     ''' Checks the validity of the proof in regards to c
     '''
@@ -44,6 +105,39 @@ def consistencyProofCheck(ppatspk,c,proof):
 
     nup = ppatspk.hashf([ppatspk.PPATSpp,ppatspk,c,cp])
     return nup == nu
+
+def consistencyProofCheck_ppatc(ppatcpk,c,proof):
+
+    nu,f1,f2,f3,fm = proof
+    #assert isinstance(c,PPATCCiphertext)
+
+    # notations
+    '''
+    h = ppatcpk.PPATCpp.h
+    h1 = ppatcpk.h1
+    g = ppatcpk.PPATCpp.g
+    g1 = ppatcpk.g1
+    g2 = ppatcpk.g2
+    c1 = c.c1
+    c2 = c.c2
+    c3 = c.c3
+    d = ppatcpk.derivCom(c)
+    d1 = d.d1
+    d2 = d.d2
+    fmp = ppatcpk.encode(fm) # fmp is a point of G1
+    c1p = g*f2 - nu*c1
+    c2p = g*f3 - nu*c2
+    c3p = g1*f1 + g2*f3 - nu*c3
+    d1p = h*f1 + h1*f2 - nu*d1
+    d2p = fmp + g1*f2 - nu*d2
+    dp = ppat.ppatc.PPATCCommitment(d1p,d2p,ppatcpk)
+    cp = ppat.ppatc.PPATCCiphertext(dp,c1p,c2p,c3p,ppatcpk)
+    '''
+    cf = ppatcpk.encrypt(fm,f1,f2,f3)
+    cp = cf - (c*nu)
+
+    nup = ppatcpk.hashf([ppatcpk.PPATCpp,ppatcpk,c,cp])
+    return nu == nup
 
 ###################################################################################
 ######################### Verifiability Proof #####################################
@@ -253,6 +347,89 @@ def multiplicationProof(ppatspk, d1,d2,d3,m1,m2,r1,r2,r3, m1p=None, m2p=None, r1
 
     return [nu,z1,z2,s1,s2,s3]
 
+def multiplicationProof_ppatc(ppatcpk,d1,d2,d3,m1,m2,r1,r2,r3,m1p=None,m2p=None,m5p=None, r1p=None,r2p=None,r3p=None,r4p=None,r5p=None,check = False):
+    ''' This method returns a NIZK proof that the commitment d3 commits on m3,
+        the product of the values commited in d1 and d2 (m1 and m2) : m3 = m1*m2.
+        r1,r2,r3 are the randomness used in the commitments d1,d2,d3.
+        m1p,m2p,r1p,r2p,r3p are the randomness used in the proof.
+        The proof theoretic details such as soundness is provided in #TODO
+    '''
+    r11, r12 = r1
+    r21, r22 = r2
+    r31, r32 = r3
+    q = ppatcpk.PPATCpp.order
+    if check :
+        assert isinstance(d1,ppat.ppatc.PPATCCommitment)
+        assert isinstance(d2,ppat.ppatc.PPATCCommitment)
+        assert isinstance(d3,ppat.ppatc.PPATCCommitment)
+        assert d1 == ppatcpk.commit(m1,r11,r12)
+        assert d2 == ppatcpk.commit(m2,r21,r22)
+        assert d3 == ppatcpk.commit((m1*m2)%q,r31,r32)
+
+    # Randomness assignations
+    if m1p == None :
+        m1p =  randint(1,int(q))
+    if m2p == None :
+        m2p =  randint(1,int(q))
+    if m5p == None :
+        m5p =  randint(1,int(q))
+    if r1p == None :
+        r1p1 = randint(1,int(q))
+        r1p2 = randint(1,int(q))
+    else :
+        r1p1,r1p2 = r1p
+        assert(not r1p1 == None and not r1p2 == None)
+    if r2p == None :
+        r2p1 = randint(1,int(q))
+        r2p2 = randint(1,int(q))
+    else :
+        r2p1,r2p2 = r2p
+        assert(not r2p1 == None and not r2p2 == None)
+    if r3p == None :
+        r3p1 = randint(1,int(q))
+        r3p2 = randint(1,int(q))
+    else :
+        r3p1,r3p2 = r3p
+        assert(not r3p1 == None and not r3p2 == None)
+    if r4p == None :
+        r4p1 = randint(1,int(q))
+        r4p2 = randint(1,int(q))
+    else :
+        r4p1,r4p2 = r4p
+        assert(not r4p1 == None or not r4p2 == None)
+    if r5p == None :
+        r5p1 = randint(1,int(q))
+        r5p2 = randint(1,int(q))
+    else :
+        r5p1,r5p2 = r5p
+        assert(not r5p1 == None or not r5p2 == None)
+
+    d1p = ppatcpk.commit(m1p,r1p1,r1p2)
+    d2p = ppatcpk.commit(m2p,r2p1,r2p2)
+    d3p = ppatcpk.commit((m1p*m2p)%q,r3p1,r3p2)
+    d4 = ppatcpk.commit((m1*m2p+m1p*m2)%q,r4p1,r4p2)
+    #d4 is a new commitment on wich a knowledge of opening has to be proven
+    d5p = ppatcpk.commit(m5p,r5p1,r5p2)
+
+    # challenge
+    nu = ppatcpk.hashf([d1,d2,d3,d4,d1p,d2p,d3p,d5p,ppatcpk])
+
+    # responses
+    z1 = (m1p+nu*m1)%q
+    z2 = (m2p+nu*m2)%q
+    z5 = (m5p+nu*(m1*m2p+m1p*m2))%q
+    s11 = (r1p1+nu*r11)%q
+    s12 = (r1p2+nu*r12)%q
+    s21 = (r2p1+nu*r21)%q
+    s22 = (r2p2+nu*r22)%q
+
+    s31 = (r3p1+nu*r4p1+(nu**2)*r31)%q
+    s32 = (r3p2+nu*r4p2+(nu**2)*r32)%q
+    s51 = (r5p1+nu*r4p1)%q
+    s52 = (r5p2+nu*r4p2)%q
+
+    return d4,nu,z1,z2,z5,s11,s12,s21,s22,s31,s32,s51,s52
+
 def multiplicationProofCheck(ppatspk,d1,d2,d3,proof):
     ''' d1,d2,d3 are PPATS Commitment
     proof is a ZK proof that d3 commits on the
@@ -301,6 +478,25 @@ def multiplicationProofCheck(ppatspk,d1,d2,d3,proof):
 
     nup = ppatspk.hashf([ppatspk.PPATSpp,ppatspk,d1,d2,d3,d1p,d2p,d3p])
 
+    return nu == nup
+
+def multiplicationProofCheck_ppatc(ppatcpk,d1,d2,d3,proof):
+    #assert isinstance(d1,PPATCCommitment)
+    #assert isinstance(d2,PPATCCommitment)
+    #assert isinstance(d3,PPATCCommitment)
+    q = ppatcpk.PPATCpp.order
+    d4,nu,z1,z2,z5,s11,s12,s21,s22,s31,s32,s51,s52 = proof
+
+    d1p1 = ppatcpk.commit(z1,s11,s12)
+    d1p = d1p1-nu*d1
+    d2p1 = ppatcpk.commit(z2,s21,s22)
+    d2p = d2p1-nu*d2
+    d3p1 = ppatcpk.commit((z1*z2)%q,s31,s32)
+    d3p = d3p1-nu*d4-(nu**2)*d3
+    d5p1 = ppatcpk.commit(z5,s51,s52)
+    d5p = d5p1-nu*d4
+
+    nup = ppatcpk.hashf([d1,d2,d3,d4,d1p,d2p,d3p,d5p,ppatcpk])
     return nu == nup
 
 def multiplicationWithTripletAndCheck(ppatspk,d1,d2,a1,a2,a3,proof,openings):

@@ -1,22 +1,11 @@
+# -*- coding: utf-8 -*-
 """
-import os, sys, inspect
-# realpath() will make your script run, even if you symlink it :)
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0, cmd_folder)
+Created on 2013-2014
 
-# use this if you want to include modules from a subfolder
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"math")))
-if cmd_subfolder not in sys.path:
-     sys.path.insert(0, cmd_subfolder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"ppat")))
-if cmd_subfolder not in sys.path:
-     sys.path.insert(0, cmd_subfolder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"nizkproofs")))
-if cmd_subfolder not in sys.path:
-     sys.path.insert(0, cmd_subfolder)
+Author : Edouard Cuvelier
+Affiliation : Université catholique de Louvain - ICTEAM - UCL Crypto Group
+Address : Place du Levant 3, 1348 Louvain-la-Neuve, BELGIUM
+email : firstname.lastname@uclouvain.be
 """
 
 import mathTools.field as field
@@ -119,6 +108,7 @@ EFp12 = ellipticCurve.ECGroup(Fp12,C12,PInf12)
 Qpr = oEC.psi(EFp12,Q) # Qpr lives in E[Fp12b]
 Pair = pairing.Pairing(EFp,EFp12,C,P,Q,n,Qpr,oEC.frobenius,oEC.prec_gamma(Fp12,u,c,d))
 
+############### PPATS ########################
 x1 = randint(1,int(n-1));print "x1 is", x1
 g1 = x1*Q
 h1td = randint(1,int(n-1));print "h1 trapdoor is", h1td
@@ -129,3 +119,17 @@ ppatspk = ppat.ppats.PPATSPublicKey(ppatspp,g1,h1)
 print 'public key ppatspk created'
 ppatssk = ppat.ppats.PPATSPrivateKey(ppatspp,ppatspk,x1)
 print 'secret key ppatssk created'
+
+############### PPATC ########################
+x1c = randint(1,int(n-1));print "x1c is", x1c
+x2c = randint(1,int(n-1));print "x2c is", x2c
+g1c = x1c*Q
+g2c = x2c*Q
+h1tdc = randint(1,int(n-1));print "h1tdc trapdoor is", h1tdc
+h1c = h1tdc*P
+ppatcpp = ppat.ppatc.PPATCPublicParameters(P,Q,Pair,'Ate',psi=None,optim=True)
+print 'public parameters (complex) ppatcpp created'
+ppatcpk = ppat.ppatc.PPATCPublicKey(ppatcpp,g1c,g2c,h1c)
+print 'public key (complex) ppatcpk created'
+ppatcsk = ppat.ppatc.PPATCPrivateKey(ppatcpp, ppatcpk, x1c, x2c)
+print 'secret key (complex) ppatcsk created'
