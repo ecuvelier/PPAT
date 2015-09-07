@@ -14,9 +14,9 @@ Running the prototype
 - the file script.py instantiate the CCE primitive: the PPATS and the PPATC public parameters, public keys and secret keys
 - the test modules for the PPAT are respectively test_ppats.py and test_ppatc.py of the ppat package
 - to test the applications, load the testApplications.py module of the applications package and then try the functions:
-   - testShortestPath(nbClients) --> we recommend < 10 clients
-   - testAuctions(nbClients) --> we recommend < 1000 clients
-   - testLinearSystem(nbClients) --> we recommend < 4096 clients and square number
+   - testShortestPath(nbClients) -> we recommend < 10 clients
+   - testAuctions(nbClients) -> we recommend < 1000 clients
+   - testLinearSystem(nbClients) -> we recommend < 4096 clients and square number
 
 Implementing new multi-party protocols
 --------------------------------------
