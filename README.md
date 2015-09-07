@@ -27,6 +27,7 @@ Any new multi-party protocol can be implemented -- for example, but not only -- 
 - Circuit to design the circuit evaluation (a circuit is composed of the Gate objects)
 - Worker
 - Client
+
 to compose your multi-party application. See for example the prototype applications presented above.
 
 
