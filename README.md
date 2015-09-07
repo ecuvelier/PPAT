@@ -17,6 +17,7 @@ Running the prototype
    - testShortestPath(nbClients) => we recommend < 10 clients
    - testAuctions(nbClients) => we recommend < 1000 clients
    - testLinearSystem(nbClients) => we recommend < 4096 clients and square number
+
 where nbClients is an integer parameter...
 
 Implementing new multi-party protocols
