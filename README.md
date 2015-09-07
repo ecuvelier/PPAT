@@ -1,6 +1,6 @@
 # PPAT prototype
 Multi-Party Function Evaluation with Perfectly Private Audit Trail
-############################################################
+--------------------------------------------------------------------
 
 The modules presented here contain 
 - the core arithmetic needed to perform natural operations and pairings on BN- elliptic curves, extension fields, etc.
@@ -9,7 +9,7 @@ The modules presented here contain
 - the test applications presented in the paper
 
 Running the prototype
-#####################
+---------------------
 
 - the file script.py instantiate the CCE primitive: the PPATS and the PPATC public parameters, public keys and secret keys
 - the test modules for the PPAT are respectively test_ppats.py and test_ppatc.py of the ppat package
@@ -19,7 +19,7 @@ Running the prototype
    - testLinearSystem(nbClients) --> we recommend < 4096 clients and square number
 
 Implementing new multi-party protocols
-#######################################
+--------------------------------------
 
 Any new multi-party protocol can be implemented -- for example, but not only -- by inheriting the abstract classes of the ppatProtocol.py of the protocols package. Inherit the classes:
 - Circuit to design the circuit evaluation (a circuit is composed of the Gate objects)
