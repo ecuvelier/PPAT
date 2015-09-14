@@ -22,7 +22,7 @@ Fp12 is towered as follows:
     xi has niether a cubic nor a square root in Fp2
 
 The elliptic curves targeted are BN-curves of equation y**2 = ax**3+b where
-b = c**4+d**6 (#TODO: complete here) ; we have that xi = c**2+d**3*i
+b = c**4+d**6 (see [2] below) ; we have that xi = c**2+d**3*i
 (where 'i' is the imaginary number)
 
 A point on these curves will be given by its x, y (and z if Jacobian)
@@ -32,6 +32,21 @@ the point at infinity. In this case, x and y are irelevant.
 
 The prerequisites for the functions below are strong to reduce the number
 of verifications inside the functions and thus fasten the execution.
+
+Algorithm 'comb2' of [1] is used to perform fast scalar multiplications when
+precomputation is available.
+
+References:
+[1] Haustenne, L.; De Neyer, Q.; Pereira, O. & others Elliptic Curve Cryptography
+in JavaScript. IACR Cryptology ePrint Archive, 2011, 2011, 654
+
+[2] Pereira, G. C.; Simplicio Jr, M. A.; Naehrig, M. & Barreto, P. S. A family of
+implementation-friendly BN elliptic curves Journal of Systems and Software,
+Elsevier, 2011, 84, 1319-1326
+
+[3] Aranha, D. F.; Karabina, K.; Longa, P.; Gebotys, C. H. & López, J. Faster
+explicit formulas for computing pairings over ordinary curves Advances in
+Cryptology--EUROCRYPT 2011, Springer, 2011, 48-68
 """
 
 import gmpy
@@ -44,8 +59,12 @@ import math
 
 def mulECP(ECG,P,alpha,sq= False, Jcoord=False):
     ''' multiplication by a scalar or FieldElem
-    Assuming P is an ECPoint represented by a 3-uple
+    Assuming P is an ECPoint represented by
+    - a 3-uple (in EFp in both Affine or Jacobian coordinates),
+    - 5-uple or 6-uple (in EFp2 in Affine or Jacobian coordinates respectively)
     and alpha an integer
+    sq is False by default assuming P is in EFp, and True if P is in EFp2
+    Jcoord indicates the use of Jacobian (True) or Affine (False) coordinates
     '''
     #p = ECG.F.char
     #if abs(alpha)>=p:
@@ -125,14 +144,14 @@ def squareAndMultiply(F,x,u,multiply,square,tab=None):
 
 def mul_comb2(alpha,tab,dadd,dble,inf):
     '''
-    Fast scalar multiplication using comb2 #TODO : reference
+    Fast scalar multiplication using comb2 see [1]
     - alpha is the multiplicand
     - tab contains
     ~ the precomputed values of the point to be multiplicated
     ~ w is the length of the windows
-    ~ m is
-    ~ d is
-    ~ e is
+    ~ m is the bit lenght of alpha
+    ~ d is the number of windows w in m (rounded down integer)
+    ~ e is the half of d (rounded down integer)
     - dadd is the addition operation to use, typically daddEFp or daddEFp2
     - dble is the doubling operation to use, typically doubleEFp or doubleEFp2
     - inf is a method that returns true if the point at infinity is given as input
@@ -174,9 +193,9 @@ def mul_comb2(alpha,tab,dadd,dble,inf):
 def precomp_comb2(w,m,P,add,mul):
     '''
     Return a table containing precomputed multiple of P that is used to compute
-    fast scalar multiplications of P using the comb2 method #TODO: Reference
-    - w is
-    - m is
+    fast scalar multiplications of P using the comb2 method see [1]
+    - w is the length of the windows
+    - m is the bit lenght of alpha
     - add is the addition operation, typically addEFp or addEFp2
     - mul is the scalar multiplication, typically mulECP with appropriate parameters
     '''
@@ -372,10 +391,10 @@ def daddEFp(ECG,P1,P2, Jcoord=False,tab = None):
 
 def prec_comb2_EFp(w,m,P,Jcoord):
     ''' This method returns a precomputed table of values used to computed fast
-    scalar multiplication of P using comb2 #TODO: ref
+    scalar multiplication of P using comb2 see [1]
     - assuming P is an EC point of ECG where ECG is EFp
-    - w is
-    - m is
+    - w is the length of the windows
+    - m is the bit lenght of alpha
     - the precomputed table stores point in Jacobian coordinates if Jcoord is true
     and in affine coordinates otherwise
     '''
@@ -727,10 +746,10 @@ def doubleEFp2(ECG,P,tab=None,Jcoord=False):
 
 def prec_comb2_EFp2(w,m,P,Jcoord):
     ''' This method returns a precomputed table of values used to computed fast
-    scalar multiplication of P using comb2 #TODO: ref
+    scalar multiplication of P using comb2 see [1]
     - assuming P is an EC point of ECG where ECG is EFp2
-    - w is
-    - m is
+    - w is the length of the windows
+    - m is the bit lenght of alpha
     - the precomputed table stores point in Jacobian coordinates if Jcoord is true
     and in affine coordinates otherwise
     '''
@@ -892,10 +911,9 @@ def tmulFp12(Fpk,a,b,gamma):
     ''' Return the product c = a*b % p in Fpk, that is Fp12
     where a,b,c are 12-uple of gmpy.mpz
     operations are done only in Fp
-    - the method returns a 12-uple of values in Fp forming an element of
-    Fp12
+    - the method returns a 12-uple of values in Fp forming an element of Fp12
     '''
-    p = Fpk.char #TODO: verify if it is correct here
+    p = Fpk.char
     g1,g2,g3,g4 = gamma[10:14]
     a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11 = a
     b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11 = b
@@ -955,7 +973,7 @@ def tsqrtFp12(Fpk,a,gamma):
     ''' Return the squaring c = a**2 % p
     where a,c are 12-uple of gmpy.mpz, a is an element of Fp12
     '''
-    p = Fpk.char #TODO: verify if it is correct here
+    p = Fpk.char
     g1,g2,g3,g4 = gamma[10:14]
     a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11 = a
 
@@ -1014,13 +1032,13 @@ def prec_gamma(Fpk,u,c,d):
     This method computes a table storing values that are used to fasten
     operations in Fpk, that is Fp12 towered as explained in the introduction of this
     module. It also stores values used to fasten the execution of the pairings
-    build on BN curves. For more details see #TODO: ref.
+    build on BN curves. For more details see [3].
     '''
 
     Fp6 = Fpk.F
     g = [0]*14
     xi = -Fp6.irpoly.coef[-1] # 1*A+4 (c**2+d**3*i)
-    p = Fpk.char #TODO: verify if it is correct here
+    p = Fpk.char
     e1 = (p-1)/3
     e2 = (p-1)/2
     # These three values are used to compute a final hard expo in Tate Pairing
@@ -1379,7 +1397,6 @@ def OptimAtePairing(P,Q,Pair,Jcoord=False):
     # Notations
     Fpk = Pair.Fpk
     EFp2 = Q.ECG
-    #p = Fpk.char-1 #TODO : correct?
     p = Fpk.char
     Fpk1 = Pair.Fpk1
     frob = tfrobenius
@@ -1448,7 +1465,9 @@ def OptimAtePairing(P,Q,Pair,Jcoord=False):
     ############## Algorithm for the Ate Pairing ##################################
     # init
     Qt = toTupleEFp2(Q,Jcoord)
-    Tt= Qt
+    #Qtj = toTupleEFp2(Q,True)
+    Tt = Qt
+    #Ttj = Qtj
 
     x = toTupleFp12(Fpk1)
     tbin = bin(abs(6*u+2))
